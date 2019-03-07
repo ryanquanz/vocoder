@@ -3,8 +3,9 @@ using namespace std;
 
 #define MODULATOR_ARG 1
 #define OUTPUT_ARG 2
-#define SAMPLE_RATE 44100
-#define BITS_PER_SAMPLE 32
+#define CARRIER_ARG 3
+#define SAMPLE_RATE 48000
+#define BITS_PER_SAMPLE 16
 #define N_BANDS 33
 // Q is set to have filter bandwith to be 1/3 octave
 #define Q_VALUE 4.318
@@ -14,6 +15,7 @@ const float filter_frequencies[N_BANDS] = {12.5, 16, 20, 25, 31.5, 40, 50, 63, 8
 
 void applyEnvelopes(vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
 void applyFilterBank(unique_ptr<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
+void multiplyEnvelopes(vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
 unique_ptr<AudioBuffer<float>> readFile(char *);
 void writeFile(string, AudioBuffer<float>&);
 //==============================================================================
@@ -46,13 +48,30 @@ int main (int argc, char* argv[])
     }
     
     // Load carrier as AudioBuffer
-    unique_ptr<AudioBuffer<float>> carrierBuffer(readFile(argv[MODULATOR_ARG]));
+    unique_ptr<AudioBuffer<float>> carrierBuffer(readFile(argv[CARRIER_ARG]));
+
     
     // Split carrier into frequency bands
-    vector<AudioBuffer<float>> carrierFilterOutput(N_BANDS, AudioBuffer<float>(1, modulatorBuffer->getNumSamples()));
+    vector<AudioBuffer<float>> carrierFilterOutput(N_BANDS, AudioBuffer<float>(1, carrierBuffer->getNumSamples()));
     applyFilterBank(carrierBuffer, carrierFilterOutput);
+    
+    // Output carroer namds
+    for(int i = 0; i < N_BANDS; i++) {
+        stringstream outputFile;
+        outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << "CARRIER.wav";
+        writeFile(outputFile.str(), carrierFilterOutput[i]);
+    }
 
-    // TODO Apply modulator envelopes to carrier bands (I think it's just element-by-element multiplication?)
+    vector<AudioBuffer<float>> envelopedCarrierFilterOutput(N_BANDS, AudioBuffer<float>(1, envelopeOutput[0].getNumSamples()));
+    multiplyEnvelopes(carrierFilterOutput, envelopeOutput, envelopedCarrierFilterOutput);
+    
+    // Output filled in envelopes
+    for(int i = 0; i < N_BANDS; i++) {
+        stringstream outputFile;
+        outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << "CARRIER_ENVLOPED.wav";
+        writeFile(outputFile.str(), envelopedCarrierFilterOutput[i]);
+    }
+    
     
     // TODO Combine enveloped carrier bands into single file
     
@@ -119,6 +138,14 @@ void applyFilterBank(unique_ptr<AudioBuffer<float>> & buffer, vector<AudioBuffer
         
         for(int j = 0; j < buffer->getNumSamples(); j++) {
             outputBuffers[i].addSample(0, j, band_pass_samples[j]);
+        }
+    }
+}
+
+void multiplyEnvelopes(vector<AudioBuffer<float>> &carriers, vector<AudioBuffer<float>> &envelopes, vector<AudioBuffer<float>> &outputs) {
+    for(int i = 0; i < N_BANDS; i++) {
+        for(int j = 0; j < envelopes[i].getNumSamples(); j++) {
+            outputs[i].addSample(0, j, carriers[i].getSample(0, j) * envelopes[i].getSample(0, j));
         }
     }
 }
