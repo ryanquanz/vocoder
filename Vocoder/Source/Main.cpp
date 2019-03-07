@@ -1,30 +1,95 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 using namespace std;
 
-#define INPUT_ARG 1
+#define MODULATOR_ARG 1
 #define OUTPUT_ARG 2
 #define SAMPLE_RATE 44100
 #define BITS_PER_SAMPLE 32
 #define N_BANDS 33
+// Q is set to have filter bandwith to be 1/3 octave
 #define Q_VALUE 4.318
+#define ENVELOPE_SAMPLE_SIZE 100
+
 const float filter_frequencies[N_BANDS] = {12.5, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
 
+void applyEnvelopes(vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
 void applyFilterBank(unique_ptr<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
 unique_ptr<AudioBuffer<float>> readFile(char *);
 void writeFile(string, AudioBuffer<float>&);
 //==============================================================================
+
 int main (int argc, char* argv[])
 {
-    unique_ptr<AudioBuffer<float>> inputBuffer = readFile(argv[INPUT_ARG]);
+    // Load modulator as AudioBuffer
+    unique_ptr<AudioBuffer<float>> inputBuffer(readFile(argv[MODULATOR_ARG]));
+    
+    // Split modulator into frequency bands
     vector<AudioBuffer<float>> filterOutput(N_BANDS, AudioBuffer<float>(1, inputBuffer->getNumSamples()));
-
     applyFilterBank(inputBuffer, filterOutput);
     
-    
+    // Output modulator frequency bands for debugging
     for(int i = 0; i < N_BANDS; i++) {
         stringstream outputFile;
-        outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << ".wav";
+        outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << "FILTER_BANK.wav";
         writeFile(outputFile.str(), filterOutput[i]);
+    }
+    
+    // Create envelope for each modulator band
+    vector<AudioBuffer<float>> envelopeOutput(N_BANDS, AudioBuffer<float>(1, inputBuffer->getNumSamples()));
+    applyEnvelopes(filterOutput, envelopeOutput);
+    
+    // Output envelopes for debugging
+    for(int i = 0; i < N_BANDS; i++) {
+        stringstream outputFile;
+        outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << "ENVELOPE.wav";
+        writeFile(outputFile.str(), envelopeOutput[i]);
+    }
+    
+    // TODO Load carrier file (could be anything, maybe square wave to start)?
+    
+    // TODO break break carrier file into frequency bands (reuse applyFilterBank function)
+    
+    // TODO Apply modulator envelopes to carrier bands (I think it's just element-by-element multiplication?)
+    
+    // TODO Combine enveloped carrier bands into single file
+    
+    // TODO Output and see if it makes robot sounds? (reuse writeFile)
+}
+
+/*****************
+ * Some things are broken here!
+ *
+ * We need to put the output data through a low pass fixture to help smooth out the curves.
+ *
+ * I think the absolute value function is broken... Not sure why. Output wave has no 0s in it...
+ *
+ *****************/
+void applyEnvelopes(vector<AudioBuffer<float>> &inputBuffers, vector<AudioBuffer<float>> &outputBuffers) {
+    for(int i = 0; i < N_BANDS; i++) {
+        AudioBuffer<float> inputBuffer = inputBuffers[i];
+        
+        AudioBuffer<float> absInputBuffer(1, inputBuffer.getNumSamples());
+        
+        for(int j = 0; j < inputBuffer.getNumSamples(); j++) {
+            // Use std::abs to avoid JUCE function
+            absInputBuffer.addSample(0, j, std::abs(inputBuffer.getSample(0, j)));
+        }
+        
+        // Use below code for debugging absolute value function
+        // stringstream outputFile;
+        // outputFile << "~/Desktop/output" << filter_frequencies[i] << "ABS.wav";
+        // writeFile(outputFile.str(), absInputBuffer);
+        
+        for (int j = 0; j < absInputBuffer.getNumSamples()/ENVELOPE_SAMPLE_SIZE; j++) {
+            float max_sample = 0;
+            for(int k = 0; k < ENVELOPE_SAMPLE_SIZE; k++) {
+                float sample = absInputBuffer.getSample(0, j*ENVELOPE_SAMPLE_SIZE + k);
+                if(sample > max_sample){
+                    max_sample = sample;
+                }
+            }
+            for(int k = 0; k < ENVELOPE_SAMPLE_SIZE; k++) outputBuffers[i].addSample(0, j * ENVELOPE_SAMPLE_SIZE + k, max_sample);
+        }
     }
 }
 
@@ -33,7 +98,6 @@ void applyFilterBank(unique_ptr<AudioBuffer<float>> & buffer, vector<AudioBuffer
     vector<IIRFilter> band_pass_filters;
     
     for(int i = 0; i < N_BANDS; i++) {
-        cout << filter_frequencies[i] << endl;
         IIRCoefficients band_pass_coefficients = IIRCoefficients::makeBandPass(SAMPLE_RATE, filter_frequencies[i], Q_VALUE);
         IIRFilter band_pass_filter;
         band_pass_filter.setCoefficients(band_pass_coefficients);
@@ -74,7 +138,7 @@ unique_ptr<AudioBuffer<float>> readFile(char *path) {
 
 void writeFile(string path, AudioBuffer<float>& buffer) {
     File outputFile(path);
-    // Delete file to make sure that we are not appending
+    // Delete file to make sure that we are starting a new file
     outputFile.deleteFile();
 
     // This has to be a normal ptr because the writer deletes it for us.
