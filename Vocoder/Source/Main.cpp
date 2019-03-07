@@ -21,22 +21,22 @@ void writeFile(string, AudioBuffer<float>&);
 int main (int argc, char* argv[])
 {
     // Load modulator as AudioBuffer
-    unique_ptr<AudioBuffer<float>> inputBuffer(readFile(argv[MODULATOR_ARG]));
+    unique_ptr<AudioBuffer<float>> modulatorBuffer(readFile(argv[MODULATOR_ARG]));
     
     // Split modulator into frequency bands
-    vector<AudioBuffer<float>> filterOutput(N_BANDS, AudioBuffer<float>(1, inputBuffer->getNumSamples()));
-    applyFilterBank(inputBuffer, filterOutput);
+    vector<AudioBuffer<float>> modulatorFilterOutput(N_BANDS, AudioBuffer<float>(1, modulatorBuffer->getNumSamples()));
+    applyFilterBank(modulatorBuffer, modulatorFilterOutput);
     
     // Output modulator frequency bands for debugging
     for(int i = 0; i < N_BANDS; i++) {
         stringstream outputFile;
         outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << "FILTER_BANK.wav";
-        writeFile(outputFile.str(), filterOutput[i]);
+        writeFile(outputFile.str(), modulatorFilterOutput[i]);
     }
     
     // Create envelope for each modulator band
-    vector<AudioBuffer<float>> envelopeOutput(N_BANDS, AudioBuffer<float>(1, inputBuffer->getNumSamples()));
-    applyEnvelopes(filterOutput, envelopeOutput);
+    vector<AudioBuffer<float>> envelopeOutput(N_BANDS, AudioBuffer<float>(1, modulatorBuffer->getNumSamples()));
+    applyEnvelopes(modulatorFilterOutput, envelopeOutput);
     
     // Output envelopes for debugging
     for(int i = 0; i < N_BANDS; i++) {
@@ -45,10 +45,13 @@ int main (int argc, char* argv[])
         writeFile(outputFile.str(), envelopeOutput[i]);
     }
     
-    // TODO Load carrier file (could be anything, maybe square wave to start)?
+    // Load carrier as AudioBuffer
+    unique_ptr<AudioBuffer<float>> carrierBuffer(readFile(argv[MODULATOR_ARG]));
     
-    // TODO break break carrier file into frequency bands (reuse applyFilterBank function)
-    
+    // Split carrier into frequency bands
+    vector<AudioBuffer<float>> carrierFilterOutput(N_BANDS, AudioBuffer<float>(1, modulatorBuffer->getNumSamples()));
+    applyFilterBank(carrierBuffer, carrierFilterOutput);
+
     // TODO Apply modulator envelopes to carrier bands (I think it's just element-by-element multiplication?)
     
     // TODO Combine enveloped carrier bands into single file
@@ -62,6 +65,8 @@ int main (int argc, char* argv[])
  * We need to put the output data through a low pass fixture to help smooth out the curves.
  *
  * I think the absolute value function is broken... Not sure why. Output wave has no 0s in it...
+ *
+ * This ignores the remainder of samples from file, i.e. the last 0-9 samples are ignored
  *
  *****************/
 void applyEnvelopes(vector<AudioBuffer<float>> &inputBuffers, vector<AudioBuffer<float>> &outputBuffers) {
