@@ -15,7 +15,7 @@ const float filter_frequencies[N_BANDS] = {12.5, 16, 20, 25, 31.5, 40, 50, 63, 8
 
 void applyEnvelopes(vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
 void applyFilterBank(unique_ptr<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
-void multiplyEnvelopes(vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
+void multiplyEnvelopes(vector<AudioBuffer<float>> &, vector<AudioBuffer<float>> &);
 unique_ptr<AudioBuffer<float>> readFile(char *);
 void writeFile(string, AudioBuffer<float>&);
 //==============================================================================
@@ -55,21 +55,20 @@ int main (int argc, char* argv[])
     vector<AudioBuffer<float>> carrierFilterOutput(N_BANDS, AudioBuffer<float>(1, carrierBuffer->getNumSamples()));
     applyFilterBank(carrierBuffer, carrierFilterOutput);
     
-    // Output carroer namds
+    // Output carrier bands
     for(int i = 0; i < N_BANDS; i++) {
         stringstream outputFile;
         outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << "CARRIER.wav";
         writeFile(outputFile.str(), carrierFilterOutput[i]);
     }
 
-    vector<AudioBuffer<float>> envelopedCarrierFilterOutput(N_BANDS, AudioBuffer<float>(1, envelopeOutput[0].getNumSamples()));
-    multiplyEnvelopes(carrierFilterOutput, envelopeOutput, envelopedCarrierFilterOutput);
+    multiplyEnvelopes(carrierFilterOutput, envelopeOutput);
     
     // Output filled in envelopes
     for(int i = 0; i < N_BANDS; i++) {
         stringstream outputFile;
         outputFile << argv[OUTPUT_ARG] << filter_frequencies[i] << "CARRIER_ENVLOPED.wav";
-        writeFile(outputFile.str(), envelopedCarrierFilterOutput[i]);
+        writeFile(outputFile.str(), carrierFilterOutput[i]);
     }
     
     
@@ -79,11 +78,8 @@ int main (int argc, char* argv[])
 }
 
 /*****************
- * Some things are broken here!
  *
  * We need to put the output data through a low pass fixture to help smooth out the curves.
- *
- * I think the absolute value function is broken... Not sure why. Output wave has no 0s in it...
  *
  * This ignores the remainder of samples from file, i.e. the last 0-9 samples are ignored
  *
@@ -92,27 +88,9 @@ void applyEnvelopes(vector<AudioBuffer<float>> &inputBuffers, vector<AudioBuffer
     for(int i = 0; i < N_BANDS; i++) {
         AudioBuffer<float> inputBuffer = inputBuffers[i];
         
-        AudioBuffer<float> absInputBuffer(1, inputBuffer.getNumSamples());
-        
-        for(int j = 0; j < inputBuffer.getNumSamples(); j++) {
-            // Use std::abs to avoid JUCE function
-            absInputBuffer.addSample(0, j, std::abs(inputBuffer.getSample(0, j)));
-        }
-        
-        // Use below code for debugging absolute value function
-        // stringstream outputFile;
-        // outputFile << "~/Desktop/output" << filter_frequencies[i] << "ABS.wav";
-        // writeFile(outputFile.str(), absInputBuffer);
-        
-        for (int j = 0; j < absInputBuffer.getNumSamples()/ENVELOPE_SAMPLE_SIZE; j++) {
-            float max_sample = 0;
-            for(int k = 0; k < ENVELOPE_SAMPLE_SIZE; k++) {
-                float sample = absInputBuffer.getSample(0, j*ENVELOPE_SAMPLE_SIZE + k);
-                if(sample > max_sample){
-                    max_sample = sample;
-                }
-            }
-            for(int k = 0; k < ENVELOPE_SAMPLE_SIZE; k++) outputBuffers[i].addSample(0, j * ENVELOPE_SAMPLE_SIZE + k, max_sample);
+        for (int j = 0; j < inputBuffer.getNumSamples()/ENVELOPE_SAMPLE_SIZE; j++) {
+            float maxSample = inputBuffer.getMagnitude(0, j*ENVELOPE_SAMPLE_SIZE, ENVELOPE_SAMPLE_SIZE);
+            for(int k = 0; k < ENVELOPE_SAMPLE_SIZE; k++) outputBuffers[i].addSample(0, j * ENVELOPE_SAMPLE_SIZE + k, maxSample);
         }
     }
 }
@@ -142,10 +120,10 @@ void applyFilterBank(unique_ptr<AudioBuffer<float>> & buffer, vector<AudioBuffer
     }
 }
 
-void multiplyEnvelopes(vector<AudioBuffer<float>> &carriers, vector<AudioBuffer<float>> &envelopes, vector<AudioBuffer<float>> &outputs) {
+void multiplyEnvelopes(vector<AudioBuffer<float>> &carriers, vector<AudioBuffer<float>> &envelopes) {
     for(int i = 0; i < N_BANDS; i++) {
         for(int j = 0; j < envelopes[i].getNumSamples(); j++) {
-            outputs[i].addSample(0, j, carriers[i].getSample(0, j) * envelopes[i].getSample(0, j));
+            carriers[i].applyGain(0, j, 1, envelopes[i].getSample(0, j));
         }
     }
 }
