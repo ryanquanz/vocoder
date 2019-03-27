@@ -11,13 +11,32 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+using namespace std;
+
+#define MODULATOR_ARG 1
+#define OUTPUT_ARG 2
+#define CARRIER_ARG 3
+#define SAMPLE_RATE 48000
+#define BITS_PER_SAMPLE 16
+#define N_BANDS 33
+// Q is set to have filter bandwith to be 1/3 octave
+#define Q_VALUE 4.318
+#define ENVELOPE_SAMPLE_SIZE 100
+
+vector<IIRFilter> buildFilters();
+
+const float filter_frequencies[N_BANDS] = {12.5, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
+
+vector<vector<float>> applyFilterBank(vector<float> input, vector<IIRFilter> filters, int num_samples);
+
 //==============================================================================
 VocoderPluginAudioProcessor::VocoderPluginAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
                       #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  AudioChannelSet::stereo(), true)
+                       .withInput  ("Modulator",  AudioChannelSet::mono(), true)
+                       .withInput  ("Carrier",  AudioChannelSet::mono(), true)
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
@@ -134,6 +153,7 @@ void VocoderPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    auto filters = buildFilters();
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -150,12 +170,42 @@ void VocoderPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+    
+    auto modulatorPointer = buffer.getWritePointer(0);
+    auto carrierPointer = buffer.getWritePointer(1);
+    
+    // This could be a source of slowness, but copying the data out makes much nicer code.
+    vector<float> modulatorData(modulatorPointer, modulatorPointer + sizeof(float) * buffer.getNumSamples());
+    vector<float> carrierData(carrierPointer, carrierPointer + sizeof(float) * buffer.getNumSamples());
+    
+    auto filteredModulatorData = applyFilterBank(modulatorData, filters, buffer.getNumSamples());
+    auto filteredCarrierData = applyFilterBank(modulatorData, filters, buffer.getNumSamples());
+    
+}
 
-        // ..do something to the data...
+vector<IIRFilter> buildFilters() {
+    // Build filters
+    vector<IIRFilter> band_pass_filters;
+
+    for(int i = 0; i < N_BANDS; i++) {
+        IIRCoefficients band_pass_coefficients = IIRCoefficients::makeBandPass(SAMPLE_RATE, filter_frequencies[i], Q_VALUE);
+        IIRFilter band_pass_filter;
+        band_pass_filter.setCoefficients(band_pass_coefficients);
+        band_pass_filters.push_back(band_pass_filter);
     }
+    
+    return band_pass_filters;
+}
+
+vector<vector<float>> applyFilterBank(vector<float> input, vector<IIRFilter> filters, int num_samples) {
+    vector<vector<float>> all_outputs;
+    for(int i = 0; i < N_BANDS; i++) {
+        vector<float> output = input;
+        filters.at(i).processSamples(&output[0], num_samples);
+        all_outputs.push_back(output);
+    }
+    
+    return all_outputs;
 }
 
 //==============================================================================

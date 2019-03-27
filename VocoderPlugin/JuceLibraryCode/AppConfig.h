@@ -326,13 +326,13 @@
  #define JucePlugin_Enable_IAA             0
 #endif
 #ifndef  JucePlugin_Name
- #define JucePlugin_Name                   "Vocoder"
+ #define JucePlugin_Name                   "VocoderPlugin"
 #endif
 #ifndef  JucePlugin_Desc
- #define JucePlugin_Desc                   "A simple vocoder"
+ #define JucePlugin_Desc                   "VocoderPlugin"
 #endif
 #ifndef  JucePlugin_Manufacturer
- #define JucePlugin_Manufacturer           "Austin Hardy and Ryan Quanz"
+ #define JucePlugin_Manufacturer           "yourcompany"
 #endif
 #ifndef  JucePlugin_ManufacturerWebsite
  #define JucePlugin_ManufacturerWebsite    ""
