@@ -35,13 +35,9 @@ vector<vector<float>> multiplyEnvelopes(vector<vector<float>> envelopes, vector<
 VocoderPluginAudioProcessor::VocoderPluginAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
                        .withInput  ("Modulator",  AudioChannelSet::mono(), true)
                        .withInput  ("Carrier",  AudioChannelSet::mono(), true)
-                      #endif
-                       .withOutput ("Output", AudioChannelSet::stereo(), true)
-                     #endif
+                       .withOutput ("Output", AudioChannelSet::mono(), true)
                        )
 #endif
 {
@@ -125,6 +121,7 @@ void VocoderPluginAudioProcessor::releaseResources()
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
+vector<float> reconstruct(vector<vector<float>> inputs);
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool VocoderPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -181,10 +178,26 @@ void VocoderPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
 
     auto filteredModulatorData = applyFilterBank(modulatorData, filters, buffer.getNumSamples());
     auto filteredCarrierData = applyFilterBank(modulatorData, filters, buffer.getNumSamples());
-    auto envelopedFilteredCarrierData = applyEnvelope(filteredCarrierData);
-    // auto adjustedModulator = multiplyEnvelopes(envelopedFilteredCarrierData, filteredModulatorData);
+    auto envelopedFilteredModulatorData = applyEnvelope(filteredModulatorData);
+    auto adjustedModulator = multiplyEnvelopes(envelopedFilteredModulatorData, filteredCarrierData);
+    auto output = reconstruct(adjustedModulator);
+    
+    copy(output.begin(), output.end(), modulatorPointer);
+}
 
-    copy(filteredModulatorData[10].begin(), filteredModulatorData[10].end(), modulatorPointer);
+vector<float> reconstruct(vector<vector<float>> inputs) {
+    vector<float> output(inputs[0].size(), 0);
+    for(auto input : inputs) {
+        for(int i = 0; i < output.size(); i++) {
+            output[i] += input[i];
+        }
+    }
+    float max_sample = 0;
+    for(auto sample:output) {
+        if(sample > max_sample) max_sample = sample;
+    }
+    for(int i = 0; i < output.size(); i++) output[i] /= max_sample;
+    return output;
 }
 
 vector<vector<float>> multiplyEnvelopes(vector<vector<float>> envelopes, vector<vector<float>> modulator) {
