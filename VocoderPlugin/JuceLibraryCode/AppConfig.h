@@ -439,11 +439,14 @@
 #ifndef  JucePlugin_IAAName
  #define JucePlugin_IAAName                "yourcompany: VocoderPlugin"
 #endif
-#ifndef  JucePlugin_VSTNumMidiInputs
- #define JucePlugin_VSTNumMidiInputs       16
+#ifndef  JucePlugin_MaxNumInputChannels
+ #define JucePlugin_MaxNumInputChannels    2
 #endif
-#ifndef  JucePlugin_VSTNumMidiOutputs
- #define JucePlugin_VSTNumMidiOutputs      16
+#ifndef  JucePlugin_MaxNumOutputChannels
+ #define JucePlugin_MaxNumOutputChannels   1
+#endif
+#ifndef  JucePlugin_PreferredChannelConfigurations
+ #define JucePlugin_PreferredChannelConfigurations  {2, 1}
 #endif
 
 //==============================================================================

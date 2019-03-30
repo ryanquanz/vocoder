@@ -175,16 +175,16 @@ void VocoderPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
     
     auto modulatorPointer = buffer.getWritePointer(0);
     auto carrierPointer = buffer.getWritePointer(1);
-    
+
     vector<float> modulatorData(modulatorPointer, modulatorPointer + sizeof(float) * buffer.getNumSamples());
     vector<float> carrierData(carrierPointer, carrierPointer + sizeof(float) * buffer.getNumSamples());
-    
+
     auto filteredModulatorData = applyFilterBank(modulatorData, filters, buffer.getNumSamples());
     auto filteredCarrierData = applyFilterBank(modulatorData, filters, buffer.getNumSamples());
     auto envelopedFilteredCarrierData = applyEnvelope(filteredCarrierData);
-    auto adjustedModulator = multiplyEnvelopes(envelopedFilteredCarrierData, filteredModulatorData);
-    
-    copy(adjustedModulator[10].begin(), adjustedModulator[10].end(), modulatorPointer);
+    // auto adjustedModulator = multiplyEnvelopes(envelopedFilteredCarrierData, filteredModulatorData);
+
+    copy(filteredModulatorData[10].begin(), filteredModulatorData[10].end(), modulatorPointer);
 }
 
 vector<vector<float>> multiplyEnvelopes(vector<vector<float>> envelopes, vector<vector<float>> modulator) {
