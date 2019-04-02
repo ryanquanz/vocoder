@@ -8,11 +8,11 @@
     <key>CFBundleIconFile</key>
     <string></string>
     <key>CFBundleIdentifier</key>
-    <string>com.yourcompany.VocoderPlugin</string>
+    <string>com.JUCE.Vocoder</string>
     <key>CFBundleName</key>
-    <string>VocoderPlugin</string>
+    <string>Vocoder</string>
     <key>CFBundleDisplayName</key>
-    <string>VocoderPlugin</string>
+    <string>Vocoder</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>

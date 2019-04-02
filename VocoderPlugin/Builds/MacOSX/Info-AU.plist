@@ -8,11 +8,11 @@
     <key>CFBundleIconFile</key>
     <string></string>
     <key>CFBundleIdentifier</key>
-    <string>com.yourcompany.VocoderPlugin</string>
+    <string>com.JUCE.Vocoder</string>
     <key>CFBundleName</key>
-    <string>VocoderPlugin</string>
+    <string>Vocoder</string>
     <key>CFBundleDisplayName</key>
-    <string>VocoderPlugin</string>
+    <string>Vocoder</string>
     <key>CFBundlePackageType</key>
     <string>BNDL</string>
     <key>CFBundleSignature</key>
@@ -29,17 +29,17 @@
     <array>
       <dict>
         <key>name</key>
-        <string>yourcompany: VocoderPlugin</string>
+        <string>JUCE: Vocoder</string>
         <key>description</key>
-        <string>VocoderPlugin</string>
+        <string>Vocoder</string>
         <key>factoryFunction</key>
-        <string>VocoderPluginAUFactory</string>
+        <string>VocoderAUFactory</string>
         <key>manufacturer</key>
         <string>Manu</string>
         <key>type</key>
         <string>aufx</string>
         <key>subtype</key>
-        <string>Qjsi</string>
+        <string>Uqpt</string>
         <key>version</key>
         <integer>65536</integer>
         <key>sandboxSafe</key>
