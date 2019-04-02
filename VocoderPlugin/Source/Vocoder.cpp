@@ -70,7 +70,6 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     auto output = reconstruct(adjustedModulator);
     
     copy(adjustedModulator[20].begin(), adjustedModulator[20].end(), modulatorPointer);
-    copy(adjustedModulator[20].begin(), adjustedModulator[20].end(), mainInputOutput.getWritePointer(1));
 }
 
 vector<float> reconstruct(vector<vector<float>> inputs) {

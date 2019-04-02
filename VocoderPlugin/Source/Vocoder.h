@@ -57,11 +57,11 @@ class Vocoder  : public AudioProcessor
 public:
     //==============================================================================
     Vocoder()
-        : AudioProcessor (BusesProperties().withInput  ("Input",     AudioChannelSet::stereo())
-                                           .withOutput ("Output",    AudioChannelSet::stereo())
-                                           .withInput  ("Sidechain", AudioChannelSet::stereo()))
+        : AudioProcessor (BusesProperties().withInput  ("Input",     AudioChannelSet::mono())
+                                           .withOutput ("Output",    AudioChannelSet::mono())
+                                           .withInput  ("Sidechain", AudioChannelSet::mono()))
     {
-        addParameter (freqbins = new AudioParameterFloat ("freqbins", "Frequency Bins TEST2", 0.0f, 1.0f, 0.5f));
+        addParameter (freqbins = new AudioParameterFloat ("freqbins", "Frequency Bins", 0.0f, 1.0f, 0.5f));
     }
 
     ~Vocoder() {}
