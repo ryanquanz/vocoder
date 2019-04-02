@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="QJSIvY" name="VocoderPlugin" projectType="audioplug" jucerVersion="5.4.1"
-              pluginChannelConfigs="{2, 1}">
+<JUCERPROJECT id="QJSIvY" name="VocoderPlugin" projectType="audioplug" jucerVersion="5.4.3"
+              pluginChannelConfigs="{2, 1}" pluginAUIsSandboxSafe="1">
   <MAINGROUP id="XsLGmP" name="VocoderPlugin">
     <GROUP id="{8B9DFBC2-23E6-8D7F-DD32-3FAF3BB1F54E}" name="Source">
       <FILE id="o6cT0J" name="PluginProcessor.cpp" compile="1" resource="0"
