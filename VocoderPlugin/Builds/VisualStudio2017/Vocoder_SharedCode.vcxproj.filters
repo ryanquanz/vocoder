@@ -784,6 +784,9 @@
     <ClCompile Include="C:\JUCE\modules\juce_audio_formats\sampler\juce_Sampler.cpp">
       <Filter>JUCE Modules\juce_audio_formats\sampler</Filter>
     </ClCompile>
+    <ClCompile Include="C:\JUCE\modules\juce_audio_formats\include_juce_audio_formats.mm">
+      <Filter>JUCE Modules\juce_audio_formats</Filter>
+    </ClCompile>
     <ClCompile Include="C:\JUCE\modules\juce_audio_formats\juce_audio_formats.cpp">
       <Filter>JUCE Modules\juce_audio_formats</Filter>
     </ClCompile>
