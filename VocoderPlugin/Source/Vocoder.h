@@ -61,7 +61,7 @@ public:
                                            .withOutput ("Output",    AudioChannelSet::mono())
                                            .withInput  ("Sidechain", AudioChannelSet::mono()))
     {
-        addParameter (freqbins = new AudioParameterFloat ("freqbins", "Frequency Bins", 0.0f, 1.0f, 0.5f));
+        addParameter (filter_band_size = new AudioParameterFloat ("filter_band_size", "Filter Band Size (Octaves):", 0.25f, 10.0f, 1.0f));
     }
 
     ~Vocoder() {}
@@ -99,19 +99,19 @@ public:
     {
         MemoryOutputStream stream (destData, true);
 
-        stream.writeFloat (*freqbins);
+        stream.writeFloat (*filter_band_size);
     }
 
     void setStateInformation (const void* data, int sizeInBytes) override
     {
         MemoryInputStream stream (data, static_cast<size_t> (sizeInBytes), false);
 
-        freqbins->setValueNotifyingHost (stream.readFloat());
+        filter_band_size->setValueNotifyingHost (stream.readFloat());
     }
 
 private:
     //==============================================================================
-    AudioParameterFloat* freqbins;
+    AudioParameterFloat* filter_band_size;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Vocoder)
