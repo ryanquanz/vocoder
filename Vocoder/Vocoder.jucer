@@ -5,6 +5,16 @@
               companyEmail="ryanquanz@gmail.com">
   <MAINGROUP id="N6PaUQ" name="Vocoder">
     <GROUP id="{1D9AFE55-71A4-AB26-2366-20580A10F2EE}" name="Source">
+      <FILE id="wWJXaO" name="Enveloper.cpp" compile="1" resource="0" file="Source/Enveloper.cpp"/>
+      <FILE id="w8XAbA" name="Enveloper.hpp" compile="0" resource="0" file="Source/Enveloper.hpp"/>
+      <FILE id="SQxJgh" name="FileHandler.cpp" compile="1" resource="0" file="Source/FileHandler.cpp"/>
+      <FILE id="fMhbVx" name="FileHandler.hpp" compile="0" resource="0" file="Source/FileHandler.hpp"/>
+      <FILE id="dAEFSc" name="FilterBank.cpp" compile="1" resource="0" file="Source/FilterBank.cpp"/>
+      <FILE id="ObvRcE" name="FilterBank.hpp" compile="0" resource="0" file="Source/FilterBank.hpp"/>
+      <FILE id="gMF4CH" name="GainAdjuster.cpp" compile="1" resource="0"
+            file="Source/GainAdjuster.cpp"/>
+      <FILE id="MKW2AX" name="GainAdjuster.hpp" compile="0" resource="0"
+            file="Source/GainAdjuster.hpp"/>
       <FILE id="RZfw7e" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
   </MAINGROUP>
@@ -47,7 +57,7 @@
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
   <LIVE_SETTINGS>
-    <OSX/>
+    <OSX buildEnabled="1"/>
   </LIVE_SETTINGS>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
 </JUCERPROJECT>

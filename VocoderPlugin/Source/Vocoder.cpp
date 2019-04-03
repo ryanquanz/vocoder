@@ -14,24 +14,14 @@
 
 using namespace std;
 
-#define MODULATOR_ARG 1
-#define OUTPUT_ARG 2
-#define CARRIER_ARG 3
-#define SAMPLE_RATE 48000
 #define BITS_PER_SAMPLE 16
 #define N_BANDS 33
-// Q is set to have filter bandwith to be 1/3 octave
-#define Q_VALUE 4.318
+#define Q_VALUE 4.318               // Q is set to have filter bandwith to be 1/3 octave
 #define ENVELOPE_SAMPLE_SIZE 10
 
 vector<IIRFilter> buildFilters();
 
 const vector<float> FILTER_FREQUENCIES {12.5, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
-
-vector<vector<float>> applyFilterBank(vector<float> input, vector<IIRFilter> filters, int num_samples);
-vector<vector<float>> applyEnvelope(vector<vector<float>> inputVector);
-vector<vector<float>> multiplyEnvelopes(vector<vector<float>> envelopes, vector<vector<float>> modulator);
-vector<float> reconstruct(vector<vector<float>> inputs);
 
 void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     ScopedNoDenormals noDenormals;
@@ -58,9 +48,16 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     auto sideChainInput  = getBusBuffer (buffer, true, 1);
     auto modulatorPointer = mainInputOutput.getWritePointer(0);
     auto carrierPointer = sideChainInput.getWritePointer(0);
+    
+    // Take the middle filter frequencies for now
+    int skip = *freqbins / N_BANDS;
+    vector<float> filt_freqs;
+    for (int i = 0; i < N_BANDS; i++) {
+        if ( i % skip == 0 ) filt_freqs.push_back(FILTER_FREQUENCIES[i]);
+    }
 
     Enveloper enveloper;
-    FilterBank filter_bank(FILTER_FREQUENCIES, SAMPLE_RATE, Q_VALUE);
+    FilterBank filter_bank(filt_freqs, getSampleRate(), Q_VALUE);
     GainAdjuster gain_adjuster;
     
     std::vector<float> modulator_samples(modulatorPointer, modulatorPointer + sizeof(float) * buffer.getNumSamples());
