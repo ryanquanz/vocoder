@@ -48,16 +48,9 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     auto sideChainInput  = getBusBuffer (buffer, true, 1);
     auto modulatorPointer = mainInputOutput.getWritePointer(0);
     auto carrierPointer = sideChainInput.getWritePointer(0);
-    
-    // Take the middle filter frequencies for now
-    int skip = *freqbins / N_BANDS;
-    vector<float> filt_freqs;
-    for (int i = 0; i < N_BANDS; i++) {
-        if ( i % skip == 0 ) filt_freqs.push_back(FILTER_FREQUENCIES[i]);
-    }
 
     Enveloper enveloper;
-    FilterBank filter_bank(*filter_band_size, SAMPLE_RATE);
+    FilterBank filter_bank(*filter_band_size, getSampleRate());
     GainAdjuster gain_adjuster;
     
     std::vector<float> modulator_samples(modulatorPointer, modulatorPointer + sizeof(float) * buffer.getNumSamples());
