@@ -57,7 +57,7 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     }
 
     Enveloper enveloper;
-    FilterBank filter_bank(filt_freqs, getSampleRate(), Q_VALUE);
+    FilterBank filter_bank(*filter_band_size, SAMPLE_RATE);
     GainAdjuster gain_adjuster;
     
     std::vector<float> modulator_samples(modulatorPointer, modulatorPointer + sizeof(float) * buffer.getNumSamples());
@@ -68,7 +68,7 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     
     std::vector<std::vector<float>> enveloped_modulator_sample_bands;
     for(int i = 0; i < modulator_sample_bands.size(); i++) {
-        enveloped_modulator_sample_bands.push_back(enveloper.envelope(modulator_sample_bands[i], ENVELOPE_SAMPLE_SIZE, FILTER_FREQUENCIES[i]/5));
+        enveloped_modulator_sample_bands.push_back(enveloper.envelope(modulator_sample_bands[i], ENVELOPE_SAMPLE_SIZE, filter_bank.frequencyAt(i)/5));
     }
     
     std::vector<std::vector<float>> gain_adjusted_carrier_sample_bands;
