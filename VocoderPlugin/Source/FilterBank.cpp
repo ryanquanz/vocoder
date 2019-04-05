@@ -21,30 +21,14 @@ FilterBank::FilterBank(float frequency_band_size, int sample_rate) {
     }
 }
 
-std::vector<std::vector<float>> FilterBank::applyFilters(const std::vector<float> &samples) {
-    std::vector<std::vector<float>> filtered_samples;
-    
-    for(IIRFilter filter : m_filters) {
-        std::vector<float> samples_copy(samples);
-        filter.processSamples(&samples_copy[0], (int)samples_copy.size());
-        filtered_samples.push_back(samples_copy);
-    }
-    
-    return filtered_samples;
-}
-
-
-std::vector<float> FilterBank::reconstruct(const std::vector<std::vector<float>> &sample_bands) {
-    std::vector<float> output(sample_bands[0].size(), 0);
-    
-    for(std::vector<float> sample_band : sample_bands) {
-        for(int sample_index = 0; sample_index < sample_bands[0].size(); sample_index++) {
-            output[sample_index] =  output[sample_index]+ sample_band[sample_index];
-        }
-    }
-    return output;
-}
-
 float FilterBank::frequencyAt(int i) {
     return m_frequencies[i];
+}
+
+int FilterBank::getNumFilters() {
+    return int(m_filters.size());
+}
+
+void FilterBank::applyFilter(int filter, float *samples, int numSamples) {
+    m_filters[filter].processSamples(samples, numSamples);
 }

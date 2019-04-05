@@ -46,32 +46,43 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     
     auto mainInputOutput = getBusBuffer (buffer, true, 0);
     auto sideChainInput  = getBusBuffer (buffer, true, 1);
-    auto modulatorPointer = mainInputOutput.getWritePointer(0);
-    auto carrierPointer = sideChainInput.getWritePointer(0);
+    auto modulatorPointer = mainInputOutput.getReadPointer(0);
+    auto carrierPointer = sideChainInput.getReadPointer(0);
+    
+    int numSamples = buffer.getNumSamples();
 
-    Enveloper enveloper;
     FilterBank filter_bank(*filter_band_size, getSampleRate());
-    GainAdjuster gain_adjuster;
     
-    std::vector<float> modulator_samples(modulatorPointer, modulatorPointer + sizeof(float) * buffer.getNumSamples());
-    std::vector<std::vector<float>> modulator_sample_bands = filter_bank.applyFilters(modulator_samples);
-    
-    std::vector<float> carrier_samples(carrierPointer, carrierPointer + sizeof(float) * buffer.getNumSamples());
-    std::vector<std::vector<float>> carrier_sample_bands = filter_bank.applyFilters(carrier_samples);
-    
-    std::vector<std::vector<float>> enveloped_modulator_sample_bands;
-    for(int i = 0; i < modulator_sample_bands.size(); i++) {
-        enveloped_modulator_sample_bands.push_back(enveloper.envelope(modulator_sample_bands[i], ENVELOPE_SAMPLE_SIZE, filter_bank.frequencyAt(i)/5));
+    float output[numSamples];
+    for(int i = 0; i < numSamples; i++) {
+        output[i] = 0.0;
     }
     
-    std::vector<std::vector<float>> gain_adjusted_carrier_sample_bands;
-    
-    for(int band_index = 0; band_index < modulator_sample_bands.size(); band_index++) {
-        gain_adjusted_carrier_sample_bands.push_back(
-                                                     gain_adjuster.adjust_gain(carrier_sample_bands[band_index], enveloped_modulator_sample_bands[band_index])
-                                                     );
+    float modulator_signal[numSamples];
+    float carrier_signal[numSamples];
+    for(int j = 0; j < filter_bank.getNumFilters(); j++) {
+        for(int i = 0; i < numSamples; i++) {
+            modulator_signal[i] = modulatorPointer[i];
+            carrier_signal[i] = carrierPointer[i];
+        }
+        
+        filter_bank.applyFilter(j, modulator_signal, numSamples);
+        filter_bank.applyFilter(j, carrier_signal, numSamples);
+
+        enveloper.envelope(modulator_signal, numSamples, getSampleRate(), ENVELOPE_SAMPLE_SIZE, filter_bank.frequencyAt(j)/5);
+
+        gain_adjuster.adjust_gain(carrier_signal, modulator_signal, numSamples);
+
+        // Reconstruct
+        for(int i = 0; i < numSamples; i++) {
+            output[i] += carrier_signal[i];
+        }
     }
     
-    std::vector<float> output(filter_bank.reconstruct(gain_adjusted_carrier_sample_bands));
-    copy(output.begin(), output.end(), modulatorPointer);
+    float *mainOutputLeft = mainInputOutput.getWritePointer(0);
+    float *mainOutputRight = mainInputOutput.getWritePointer(1);
+    for(int i = 0; i < numSamples; i++) {
+        mainOutputLeft[i] = output[i];
+        mainOutputRight[i] = output[i];
+    }
 }

@@ -16,5 +16,5 @@
 
 class Enveloper {
 public:
-    std::vector<float> envelope(const std::vector<float> &, int, float);
+    void envelope(float *, int, double, int, float);
 };

@@ -14,5 +14,5 @@
 
 class GainAdjuster {
 public:
-    std::vector<float> adjust_gain(const std::vector<float>&, const std::vector<float>&);
+    void adjust_gain(float *, float *, int);
 };

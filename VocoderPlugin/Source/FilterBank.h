@@ -15,9 +15,9 @@
 class FilterBank {
 public:
     FilterBank(float, int);
-    std::vector<std::vector<float>> applyFilters(const std::vector<float> &);
-    std::vector<float> reconstruct(const std::vector<std::vector<float>> &);
     float frequencyAt(int);
+    int getNumFilters();
+    void applyFilter(int, float *, int);
 private:
     std::vector<IIRFilter> m_filters;
     std::vector<float> m_frequencies;
