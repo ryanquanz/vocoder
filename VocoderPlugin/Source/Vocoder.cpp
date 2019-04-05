@@ -79,8 +79,6 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
         }
     }
     
-    // Normalize output?
-    
     float *mainOutputLeft = mainInputOutput.getWritePointer(0);
     float *mainOutputRight = mainInputOutput.getWritePointer(1);
     for(int i = 0; i < numSamples; i++) {
