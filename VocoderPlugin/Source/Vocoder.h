@@ -112,6 +112,9 @@ public:
 private:
     //==============================================================================
     AudioParameterFloat* filter_band_size;
+    
+    Enveloper enveloper;
+    GainAdjuster gain_adjuster;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Vocoder)
