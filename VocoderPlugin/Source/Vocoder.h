@@ -52,7 +52,7 @@
 #include "GainAdjuster.h"
 
 //==============================================================================
-class Vocoder  : public AudioProcessor
+class Vocoder : public AudioProcessor
 {
 public:
     //==============================================================================

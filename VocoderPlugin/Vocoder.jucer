@@ -2,7 +2,7 @@
 
 <JUCERPROJECT name="Vocoder" companyName="JUCE" version="1.0.0" userNotes="Vocoder audio plugin."
               companyWebsite="http://juce.com" defines="" projectType="audioplug"
-              pluginManufacturer="JUCE" pluginAUIsSandboxSafe="1" pluginFormats="buildVST3,buildAU,buildStandalone"
+              pluginManufacturer="JUCE" pluginAUIsSandboxSafe="1" pluginFormats="buildAU,buildStandalone,buildVST3"
               id="UqPTea" jucerVersion="5.4.3">
   <MAINGROUP id="p8wWW3" name="Vocoder">
     <GROUP id="{282B4AF8-3E7A-231B-F5EB-1281487147D9}" name="Source">

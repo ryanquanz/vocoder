@@ -14,14 +14,7 @@
 
 using namespace std;
 
-#define BITS_PER_SAMPLE 16
-#define N_BANDS 33
-#define Q_VALUE 4.318               // Q is set to have filter bandwith to be 1/3 octave
 #define ENVELOPE_SAMPLE_SIZE 10
-
-vector<IIRFilter> buildFilters();
-
-const vector<float> FILTER_FREQUENCIES {12.5, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
 
 void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
     ScopedNoDenormals noDenormals;
@@ -69,7 +62,8 @@ void Vocoder::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) {
         filter_bank.applyFilter(j, modulator_signal, numSamples);
         filter_bank.applyFilter(j, carrier_signal, numSamples);
 
-        enveloper.envelope(modulator_signal, numSamples, getSampleRate(), ENVELOPE_SAMPLE_SIZE, filter_bank.frequencyAt(j)/5);
+        enveloper.envelope(modulator_signal, numSamples, getSampleRate(),
+                           ENVELOPE_SAMPLE_SIZE, filter_bank.frequencyAt(j)/5);
 
         gain_adjuster.adjust_gain(carrier_signal, modulator_signal, numSamples);
 

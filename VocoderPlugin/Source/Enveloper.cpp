@@ -32,7 +32,7 @@ void Enveloper::envelope(float *samples, int numSamples, double sampleRate, int 
     
     for(dsp::IIR::Coefficients<float> *coefficients : coefficient_sets) {
         dsp::IIR::Filter<float> filter(coefficients);
-        float *audio[1] = { &samples[0] };
+        float *audio[1] = { samples };
         dsp::AudioBlock<float> block(audio, 1, numSamples);
         dsp::ProcessContextReplacing<float> context(block);
         filter.process(context);
